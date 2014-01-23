@@ -1,0 +1,25 @@
+(eng)
+How to use findpath function
+6 arguments:
+- a list: the i-th element is a list of the IDs of the edges connected to vertex i
+- another list (list of the edges): the i-th element represents the i-th edge and is a list with the following variables: start point's ID; end point's ID; lenght; pollution amount (depending on the length); a number: 0 if the edge is traversable, 1 otherwise
+- path's start point's ID
+- path's end point's ID
+- "target length"
+- maximum length (-1 if undefined)
+
+The function returns the ordered list of the IDs of the edges of the optimal path
+
+
+(ita)
+Istruzioni utilizzo funzione findpath
+
+6 sono gli argomenti da passare alla funzione:
+- lista delle adiacenze: è una lista il cui elemento i-esimo è una lista degli ID degli archi collegati al nodo i
+- lista degli archi: è una lista il cui elemento i-esimo rappresenta l'arco i e contiene una lista con le seguenti variabili (ordinate): ID del nodo di partenza; ID del nodo di arrivo; lunghezza; "cattività" dell'aria, dipendente anche dalla lunghezza del percorso; un numero pari a 0 se l'arco è attraversabile, 1 altrimenti
+- ID del nodo di partenza
+- ID del nodo di arrivo
+- "lunghezza target"
+- massima lunghezza (-1 se indefinita)
+
+La funzione ritorna la lista ordinata degli ID degli archi da attraversare
