@@ -7,22 +7,6 @@ import sys
 import argparse
 from datetime import datetime
 
-LOCAL_DB_SETTINGS = {
-    'host': 'localhost',
-    'port': '5432',
-    'database': 'appiedi_test',  # db name
-    'user': 'marco',
-    'password': '',
-}
-
-DB_SETTINGS = {
-    'host': 'geopg',
-    'port': '50003',
-    'database': 'appiedi',  # db name
-    'user': 'appiedi',
-    'password': 'app2K14iedi!!',
-}
-
 
 def stdout_w(s, v=True):
     """
