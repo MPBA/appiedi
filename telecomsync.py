@@ -7,6 +7,8 @@ import sys
 import argparse
 from datetime import datetime
 
+from local_settings import DB_SETTINGS
+
 
 def stdout_w(s, v=True):
     """
@@ -21,10 +23,10 @@ def stdout_w(s, v=True):
 def fetch_telecom_data(t_start=None, t_end=None):
     """
     fetch telecom data (as json).
-    If no timestamps are provided, default to last 24h.
+    If no timestamps are provided, default to last 26h.
     """
     # set default value here in order to be able to handle 'None' value
-    t_start = t_start or time.time()-(60*60*24)
+    t_start = t_start or time.time()-(60*60*26)
     t_end = t_end or time.time()
 
     url = 'http://collector-svil.mobileterritoriallab.eu/sensordrone/api/'
