@@ -118,8 +118,8 @@ if __name__ == '__main__':
     parser.add_argument('timestamp_end', default=None, nargs='?')
     parser.add_argument('-c', '--cron', help='cron mode', dest='cron',
                         action='store_true')
-    parser.add_argument('-q', '--quiet', help='quiet output',
-                        dest='quiet', action='store_true')
+    parser.add_argument('-v', '--verbose', help='verbose output',
+                        dest='verbose', action='store_true')
     args = parser.parse_args()
 
     timestamp_start = args.timestamp_start
@@ -129,9 +129,13 @@ if __name__ == '__main__':
     _t = time.time()
     data = fetch_telecom_data(args.timestamp_start, args.timestamp_end)
 
-    if not args.quiet:
+    if args.verbose:
         print 'Got the data'
-    insert_data(data, not args.quiet)
+
+    insert_data(data, args.verbose)
+
+    if args.verbose:
+        print()
 
     if args.cron:
         os.environ['LAST_FETCH_TIMESTAMP'] = _t
