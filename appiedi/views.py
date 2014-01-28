@@ -47,31 +47,37 @@ def co_values(request, lon, lat):
         # wtf? this should definitely NOT happen.
         return {'error:': 'Coordinates are not valid.'}
 
-    with psycopg2.connect(**DB_SETTINGS) as conn:
-        with conn.cursor() as cur:
-            # total
-            cur.callproc('query_raster', ['1', lon, lat])
-            res['results']['total'] = cur.fetchone()[0]
+    conn = psycopg2.connect(**DB_SETTINGS)
+    cur = conn.cursor()
+    try:
+        # total
+        cur.callproc('query_raster', ['1', lon, lat])
+        res['results']['total'] = cur.fetchone()[0]
 
-            # weekly
-            cur.callproc('query_raster', [2, lon, lat])
-            res['results']['weekly'] = cur.fetchone()[0]
+        # weekly
+        cur.callproc('query_raster', [2, lon, lat])
+        res['results']['weekly'] = cur.fetchone()[0]
 
-            # dow
-            dow = (datetime.now().weekday() + 1) % 7
-            cur.callproc('query_raster', [(dow+3), lon, lat])
-            res['results']['dow'] = cur.fetchone()[0]
+        # dow
+        dow = (datetime.now().weekday() + 1) % 7
+        cur.callproc('query_raster', [(dow+3), lon, lat])
+        res['results']['dow'] = cur.fetchone()[0]
 
-            # yesterday daily average
-            yesterday = (datetime.now() - timedelta(days=1)).date()
-            cur.callproc('get_daily_average', [yesterday])
-            res['results']['daily_average'] = cur.fetchone()[0]
+        # yesterday daily average
+        yesterday = (datetime.now() - timedelta(days=1)).date()
+        cur.callproc('get_daily_average', [yesterday])
+        res['results']['daily_average'] = cur.fetchone()[0]
 
-            # trend average
-            ta_start = (datetime.now() - timedelta(days=8)).date()
-            ta_end = (datetime.now() - timedelta(days=1)).date()
-            cur.callproc('get_trend_average', [ta_start, ta_end])
-            res['results']['trend_average'] = dict(cur.fetchall())
+        # trend average
+        ta_start = (datetime.now() - timedelta(days=8)).date()
+        ta_end = (datetime.now() - timedelta(days=1)).date()
+        cur.callproc('get_trend_average', [ta_start, ta_end])
+        res['results']['trend_average'] = dict(cur.fetchall())
+    except Exception as e:
+        res['error'] = str(e)
+    finally:
+        cur.close()
+        conn.close()
 
     return res
 
@@ -80,10 +86,16 @@ def co_values(request, lon, lat):
 def trend_average(request, date_start, date_end):
     res = {'error:': None, 'results': {}}
 
-    with psycopg2.connect(**DB_SETTINGS) as conn:
-        with conn.cursor() as cur:
-            cur.callproc('get_trend_average', [date_start, date_end])
-            res['results'] = dict(cur.fetchall())
+    conn = psycopg2.connect(**DB_SETTINGS)
+    cur = conn.cursor()
+    try:
+        cur.callproc('get_trend_average', [date_start, date_end])
+        res['results'] = dict(cur.fetchall())
+    except Exception as e:
+        res['error'] = str(e)
+    finally:
+        cur.close()
+        conn.close()
 
     return res
 
