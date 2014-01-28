@@ -6,8 +6,13 @@ from models import TelecomDataset
 from pyhive.extra.django import DjangoModelSerializer
 from pyhive.serializers import ListSerializer
 from pyhive.modifiers import exclude_fields
+from datetime import datetime, timedelta
+
 import requests
 import json
+import psycopg2
+
+from local_settings import DB_SETTINGS
 
 
 # Create your views here.
@@ -27,6 +32,60 @@ def hello(request):
 
     #a = {'asd': 'asd', 'rec': 1, 'timestamp': '2014-01-21 11:11:11', 'data': jsondata, 'telecom': r.json()}
     return r.json()
+
+
+@render_to_json(mimetype='application/json')
+def co_values(request, lon, lat):
+    res = {'error': None, 'results': {}}
+    # query = \
+    #     'SELECT ST_Value(rast, 1, st_transform(st_setsrid(st_makepoint({long},{lat}),4326),32632),' \
+    #     ' FALSE) FROM raster_co3 WHERE raster_co3.rid = {rid};'
+    try:
+        lon = float(lon)
+        lat = float(lat)
+    except ValueError:
+        # wtf? this should definitely NOT happen.
+        return {'error:': 'Coordinates are not valid.'}
+
+    with psycopg2.connect(**DB_SETTINGS) as conn:
+        with conn.cursor() as cur:
+            # total
+            cur.callproc('query_raster', ['1', lon, lat])
+            res['results']['total'] = cur.fetchone()[0]
+
+            # weekly
+            cur.callproc('query_raster', [2, lon, lat])
+            res['results']['weekly'] = cur.fetchone()[0]
+
+            # dow
+            dow = (datetime.now().weekday() + 1) % 7
+            cur.callproc('query_raster', [(dow+3), lon, lat])
+            res['results']['dow'] = cur.fetchone()[0]
+
+            # yesterday daily average
+            yesterday = (datetime.now() - timedelta(days=1)).date()
+            cur.callproc('get_daily_average', [yesterday])
+            res['results']['daily_average'] = cur.fetchone()[0]
+
+            # trend average
+            ta_start = (datetime.now() - timedelta(days=8)).date()
+            ta_end = (datetime.now() - timedelta(days=1)).date()
+            cur.callproc('get_trend_average', [ta_start, ta_end])
+            res['results']['trend_average'] = dict(cur.fetchall())
+
+    return res
+
+
+@render_to_json(mimetype='application/json')
+def trend_average(request, date_start, date_end):
+    res = {'error:': None, 'results': {}}
+
+    with psycopg2.connect(**DB_SETTINGS) as conn:
+        with conn.cursor() as cur:
+            cur.callproc('get_trend_average', [date_start, date_end])
+            res['results'] = dict(cur.fetchall())
+
+    return res
 
 
 # def process_list(request):
