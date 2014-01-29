@@ -5,21 +5,11 @@ import requests
 import psycopg2
 import time
 import json
-import sys
 import argparse
-from datetime import datetime
+
+from utils import stdout_w, postgres_timestamp_format, telecom_timestamp_format
 
 from local_settings import DB_SETTINGS
-
-
-def stdout_w(s, v=True):
-    """
-    print a string on stdout, without newline.
-    if v is set to False, do nothing.
-    """
-    if v:
-        sys.stdout.write(s)
-        sys.stdout.flush()
 
 
 def fetch_telecom_data(t_start=None, t_end=None):
@@ -33,41 +23,14 @@ def fetch_telecom_data(t_start=None, t_end=None):
 
     url = 'http://collector-svil.mobileterritoriallab.eu/sensordrone/api/'
     payload = {
-        'timestamp_start': timestamp_format(t_start),
-        'timestamp_end': timestamp_format(t_end)
+        'timestamp_start': telecom_timestamp_format(t_start),
+        'timestamp_end': telecom_timestamp_format(t_end)
     }
     headers = {'content-type': 'application/json'}
     r = requests.post(url, data=json.dumps(payload), headers=headers)
     if r.ok:
         return r.json()
     raise requests.ConnectionError('Request failed.')
-
-
-def timestamp_format(timestamp):
-    """
-    Format unix timestamp (floating point value) to telecom-friendly string.
-    If the value provided is already a string, do nothing (assuming it is a
-    correctly formatted one).
-    """
-    # %Y-%m-%d %H:%M:%S'
-    try:
-        _ts = float(timestamp)
-        return datetime.fromtimestamp(_ts).strftime('%d/%m/%Y %H:%M')
-    except ValueError:
-        # assume that timestamp is already correctly formatted
-        return timestamp
-
-
-def telecom_to_postgres_timestamp(timestamp):
-    """
-    convert <dd/mm/yyyy hh:mm> into <yyyy-mm-dd hh:mm:ss>
-    """
-    # make sure 'timestamp' is not a float timestamp
-    timestamp = timestamp_format(timestamp)
-    # convert to time_struct...
-    _t = time.strptime(timestamp, '%d/%m/%Y %H:%M')
-    # ...and format it
-    return time.strftime('%Y-%m-%d %H:%M:%S', _t)
 
 
 def build_query(cur, obj):
@@ -78,7 +41,7 @@ def build_query(cur, obj):
             ') VALUES (%s, %s, %s, %s, %s, %s, %s);'
         ),
         (
-            telecom_to_postgres_timestamp(obj['timestamp']),
+            postgres_timestamp_format(obj['timestamp']),
             obj['longitude'], obj['provider'],
             obj['latitude'], obj['speed'],
             obj['co_value'], obj['accuracy']
@@ -110,6 +73,7 @@ def insert_data(json_data=None, verbose=False):
                     raise
             conn.commit()
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Update appiedi db with data from Telecom Italia'
@@ -139,3 +103,4 @@ if __name__ == '__main__':
 
     if args.cron:
         os.environ['LAST_FETCH_TIMESTAMP'] = _t
+
