@@ -100,6 +100,30 @@ def trend_average(request, date_start, date_end):
     return res
 
 
+@render_to_json(mimetype='application/json')
+def query_average(request, date_s, date_e, lon_s, lon_e, lat_s, lat_e):
+    res = {'error': None, 'result': None}
+
+    # I hate to split between lines
+    query = 'SELECT AVG(co) FROM telecom_dataset_trento WHERE latitude >= ' \
+            '%s AND latitude <= %s AND longitude >= %s AND' \
+            ' longitude <= %s AND mtl_timestamp >=' \
+            ' %s::DATE::TIMESTAMP AND mtl_timestamp <= ' \
+            '(%s::DATE + 1)::TIMESTAMP;'
+
+    conn = psycopg2.connect(**DB_SETTINGS)
+    cur = conn.cursor()
+    try:
+        cur.execute(query, (lat_s, lat_e, lon_s, lon_e, date_s, date_e))
+        res['result'] = cur.fetchone()[0]
+
+    except (TypeError, psycopg2.Error) as e:
+        res['error'] = str(e)
+    finally:
+        cur.close
+        conn.close()
+    return res
+
 # def process_list(request):
 #     try:
 #         session = request.session.get('runp', [])
