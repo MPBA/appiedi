@@ -54,20 +54,24 @@ def co_values(request, lon, lat):
         # cur.callproc('query_raster', ['1', lon, lat])
         cur.callproc('query_raster', ['co_general', lon, lat])
         res['results']['total'] = cur.fetchone()[0]
+        cur.close()
 
         # weekly
         cur.callproc('query_raster', ['co_weekly', lon, lat])
         res['results']['weekly'] = cur.fetchone()[0]
+        cur.close()
 
         # dow
         dow = (datetime.now().weekday() + 1) % 7
         cur.callproc('query_raster', ['co_dow{0}'.format(dow), lon, lat])
         res['results']['dow'] = cur.fetchone()[0]
+        cur.close()
 
         # yesterday daily average
         yesterday = (datetime.now() - timedelta(days=1)).date()
         cur.callproc('get_daily_average', [yesterday])
         res['results']['daily_average'] = cur.fetchone()[0]
+        cur.close()
 
         # trend average
         ta_start = (datetime.now() - timedelta(days=8)).date()

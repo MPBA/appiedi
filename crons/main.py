@@ -75,8 +75,9 @@ def move_to_db(map_name, table_name=None):
 
 
 def raster_values_to_graph():
-    with psycopg2.connect(**DB_SETTINGS) as conn, conn.cursor() as cur:
-        cur.callproc('raster_values_to_graph')
+    with psycopg2.connect(**DB_SETTINGS) as conn:
+        with conn.cursor() as cur:
+            cur.callproc('raster_values_to_graph')
 
 
 def main():
