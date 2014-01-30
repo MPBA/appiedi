@@ -4,7 +4,6 @@ from findpath_edges import findpath
 from dijkstra import dijkstra
 from local_settings import DB_SETTINGS
 
-# conn = ogr.Open('PG:dbname=appiedi host=geopg port=50003 user=appiedi password=app2K14iedi!!')
 conn = ogr.Open(
     'PG:dbname={0} host={1} port={2} user={3} password={4}'
     .format(DB_SETTINGS['database'], DB_SETTINGS['host'], DB_SETTINGS['port'],
