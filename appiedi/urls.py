@@ -14,6 +14,10 @@ urlpatterns = patterns('appiedi.views',
                        url(r'^covalue/(?P<lon>[\d.]+)/(?P<lat>[\d.]+)', 'co_values'),
                        url(r'^trendaverage/(?P<date_start>\d{4}\-\d{2}\-\d{2})/(?P<date_end>\d{4}\-\d{2}\-\d{2})', 'trend_average'),
                        # def query_average(request, date_s, date_e, lon_s, lon_e, lat_s, lat_e):
-                       url(r'^queryaverage/(?P<date_s>\d{4}\-\d{2}\-\d{2})/(?P<date_e>\d{4}\-\d{2}\-\d{2})/(?P<lon_s>[\d.]+)/(?P<lon_e>[\d.]+)/(?P<lat_s>[\d.]+)/(?P<lat_e>[\d.]+)/','query_average')
+                       url(r'^queryaverage/(?P<date_s>\d{4}\-\d{2}\-\d{2})/(?P<date_e>\d{4}\-\d{2}\-\d{2})/(?P<lon_s>[\d.]+)/(?P<lon_e>[\d.]+)/(?P<lat_s>[\d.]+)/(?P<lat_e>[\d.]+)/','query_average'),
+                       url(r'^pathfinder/(?P<lon_s>[\d.]+)/(?P<lat_s>[\d.]+)/(?P<lon_e>[\d.]+)/(?P<lat_e>[\d.]+)$', 'pathfinder'),
 )
 
+# un json con
+# [ (lat, long) valore
+# array con longi
