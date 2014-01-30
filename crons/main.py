@@ -9,7 +9,7 @@ from datetime import datetime
 
 from telecomsync import fetch_telecom_data, insert_data
 from generatemaps import generate_map
-from utils import postgres_timestamp_format
+from utils import postgres_timestamp_format, get_avg_co2_value
 from local_settings import DB_SETTINGS
 
 
@@ -43,7 +43,7 @@ def call_command(command, environment=None, shell=False):
     return streamdata[0], streamdata[1], process.returncode
 
 
-def gen_map(t_start, t_end, map_name, dow=-1, testing=False):
+def gen_map(t_start, t_end, map_name, dow=-1, default_val=None, testing=False):
     """
     Helper function to call 'generatemap' passing timestamp instead of
     formatted string
@@ -54,7 +54,9 @@ def gen_map(t_start, t_end, map_name, dow=-1, testing=False):
     return generate_map(
         postgres_timestamp_format(t_start),
         postgres_timestamp_format(t_end),
-        map_name
+        map_name,
+        day=dow,
+        default_val=default_val
     )
 
 
@@ -97,10 +99,14 @@ def main():
 
     # all inclusive map
     v_print('Generating general map...', verbose)
-    gen_map(0.0, t, 'general', testing=testing)
-    v_print('Moving to db...')
+    avg_val = get_avg_co2_value()
+    gen_map(0.0, t, 'general', default_val=avg_val, testing=testing)
+    v_print('Moving to db general...')
     move_to_db('general', 1)
+    v_print('Moving to db general_avg')
+    move_to_db('general_avg', 10)
     v_print('Done.', verbose)
+
 
     # last 7 days
     # week_start = time.mktime(

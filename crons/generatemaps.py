@@ -29,7 +29,7 @@ print grass.gisenv()
 #0 domenica,1 lunedi,2 domencica
 
 # script di enrico
-def generate_map(timestamp_start, timestamp_end, map_name, day=-1):
+def generate_map(timestamp_start, timestamp_end, map_name, day=-1, default_val=None):
     nomeR = map_name + "_punti3"
     try:
         grass.run_command("v.db.connect", flags="d", map=nomeR, quiet=True)
@@ -52,11 +52,16 @@ def generate_map(timestamp_start, timestamp_end, map_name, day=-1):
                       output=nomeR , where=where
                       , overwrite=True)
     # grass.run_command("g.region", vect=nomeR, res=20)
-    grass.run_command("v.surf.bspline", input=nomeR , raster_output=map_name + "_rasterCo", method="linear", column="co", _lambda="0.05", overwrite=True, quiet=False)
+    grass.run_command("v.surf.bspline", input=nomeR , raster_output=map_name + "_rasterCo", method="linear", column="co", _lambda="0.05", overwrite=True, quiet=True)
 
     grass.run_command("r.mapcalc", expression=map_name + "_no0=if(" + map_name + "_rasterCo," + map_name + "_rasterCo,0,0)", overwrite=True, quiet=True)
     grass.run_command("r.mapcalc", expression=map_name + "_co9999=if(isnull(" + map_name + "_no0),-9999," + map_name + "_no0)", overwrite=True, quiet=True)
-    grass.run_command("r.out.gdal", input=map_name + "_co9999", format="GTiff", output=DIRECTORY + map_name + ".tiff", overwrite=True, quiet=True);
+    grass.run_command("r.out.gdal", input=map_name + "_co9999", format="GTiff", output=DIRECTORY + map_name + ".tiff", overwrite=True, quiet=True)
+
+    if default_val is not None:
+        grass.run_command("r.mapcalc", expression=map_name + "_coavg=if(isnull(" + map_name + "_no0)," + str(default_val) + ',' + map_name + "_no0)", overwrite=True, quiet=True)
+        grass.run_command("r.out.gdal", input=map_name + "_coavg", format="GTiff", output=DIRECTORY + map_name + '_avg' + ".tiff", overwrite=True, quiet=True)
+
     # uploadRasterMap(DIRECTORY, nomeMappa + ".tiff")
     grass.run_command("v.db.connect", flags="d", map=nomeR, quiet=True)
     grass.run_command("g.mremove", flags="fr", vect=map_name + "_*", rast=map_name + "_*", overwrite=True, quiet=True)

@@ -1,6 +1,9 @@
 import sys
 import time
 from datetime import datetime
+import psycopg2
+
+from local_settings import DB_SETTINGS
 
 
 def stdout_w(s, v=True):
@@ -39,3 +42,10 @@ def postgres_timestamp_format(timestamp):
     # ...and format it
     return time.strftime('%Y-%m-%d %H:%M:%S', t_struct)
 
+
+def get_avg_co2_value():
+    with psycopg2.connect(**DB_SETTINGS) as conn:
+        with conn.cursor() as cur:
+            cur.execute('select avg(co) from telecom_dataset_trento;')
+            res = cur.fetchone()[0]
+    return res
