@@ -48,32 +48,36 @@ def co_values(request, lon, lat):
         return {'error:': 'Coordinates are not valid.'}
 
     conn = psycopg2.connect(**DB_SETTINGS)
-    cur = conn.cursor()
     try:
         # total
         # cur.callproc('query_raster', ['1', lon, lat])
+        cur = conn.cursor()
         cur.callproc('query_raster', ['co_general', lon, lat])
         res['results']['total'] = cur.fetchone()[0]
         cur.close()
 
         # weekly
+        cur = conn.cursor()
         cur.callproc('query_raster', ['co_weekly', lon, lat])
         res['results']['weekly'] = cur.fetchone()[0]
         cur.close()
 
         # dow
+        cur = conn.cursor()
         dow = (datetime.now().weekday() + 1) % 7
         cur.callproc('query_raster', ['co_dow{0}'.format(dow), lon, lat])
         res['results']['dow'] = cur.fetchone()[0]
         cur.close()
 
         # yesterday daily average
+        cur = conn.cursor()
         yesterday = (datetime.now() - timedelta(days=1)).date()
         cur.callproc('get_daily_average', [yesterday])
         res['results']['daily_average'] = cur.fetchone()[0]
         cur.close()
 
         # trend average
+        cur = conn.cursor()
         ta_start = (datetime.now() - timedelta(days=8)).date()
         ta_end = (datetime.now() - timedelta(days=1)).date()
         cur.callproc('get_trend_average', [ta_start, ta_end])
