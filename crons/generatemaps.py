@@ -33,38 +33,82 @@ def generate_map(timestamp_start, timestamp_end, map_name, day=-1, default_val=N
     nomeR = map_name + "_punti3"
     try:
         grass.run_command("v.db.connect", flags="d", map=nomeR, quiet=True)
-        grass.run_command("g.mremove", flags="fr", vect=map_name + "_*", rast=map_name + "_*", overwrite=True, quiet=True)
+        # grass.run_command("g.mremove", flags="fr", vect=map_name + "_*", rast=map_name + "_*", overwrite=True, quiet=True)
+        grass.run_command("g.mremove",
+                          flags="fr",
+                          vect='{0}_*'.format(map_name),
+                          rast="{0}_*".format(map_name),
+                          overwrite=True,
+                          quiet=True)
     except:
         pass
 
-    # gsetup.init(os.getenv('GISBASE'), GRASSLOCATION, "TRento", MAPSET)
-    grass.run_command("db.connect", database="host=" + HOSTDB + ",port=" + PORTDB + ",dbname=" + USERDB + ",schema=public", driver="pg" , quiet=True)
-    grass.run_command("db.login", driver='pg', user=USERDB, password=PASSWORDDB, quiet=True)
+    grass.run_command("db.connect",
+                      database="host={0},port={1},dbname={2},schema=public"
+                               .format(HOSTDB, PORTDB, USERDB),
+                      driver="pg",
+                      quiet=True)
+
+    grass.run_command("db.login", driver='pg', user=USERDB,
+                      password=PASSWORDDB, quiet=True)
+
     grass.read_command("db.connect", flags="p")
-    # grass.run_command("g.region" , res=20)
-    grass.run_command("g.region", w='648315.280814473', s='5089928.11165279', e='677478.656978493', n='5116773.10179288', res='20')
-    where = "mtl_timestamp > '{0}' and mtl_timestamp < '{1}'".format(timestamp_start, timestamp_end)
-    # "mtl_timestamp > '2013-01-12 00:00:00' and mtl_timestamp < '2013-01-19 00:00:00'"
+
+    grass.run_command("g.region",
+                      w='648315.280814473', s='5089928.11165279',
+                      e='677478.656978493', n='5116773.10179288',
+                      res='20')
+
+    where = "mtl_timestamp > '{0}' and mtl_timestamp < '{1}'"\
+            .format(timestamp_start, timestamp_end)
+
     if day >= 0:
         # where += " and extract(dow FROM mtl_timestamp)=" + str(day % 7)
-        where += " and date_part('dow',mtl_timestamp)=" + str(day % 7)
-    grass.run_command("v.in.db", flags="t", table="telecom_dataset_trento", x="ST_X(the_geom)", y="ST_Y(the_geom)", key="id",
-                      output=nomeR , where=where
-                      , overwrite=True)
-    # grass.run_command("g.region", vect=nomeR, res=20)
-    grass.run_command("v.surf.bspline", input=nomeR , raster_output=map_name + "_rasterCo", method="linear", column="co", _lambda="0.05", overwrite=True, quiet=True)
+        where += " and date_part('dow',mtl_timestamp)={0}".format((day % 7))
 
-    grass.run_command("r.mapcalc", expression=map_name + "_no0=if(" + map_name + "_rasterCo," + map_name + "_rasterCo,0,0)", overwrite=True, quiet=True)
-    grass.run_command("r.mapcalc", expression=map_name + "_co9999=if(isnull(" + map_name + "_no0),-9999," + map_name + "_no0)", overwrite=True, quiet=True)
-    grass.run_command("r.out.gdal", input=map_name + "_co9999", format="GTiff", output=DIRECTORY + map_name + ".tiff", overwrite=True, quiet=True)
+    grass.run_command("v.in.db",
+                      flags="t", table="telecom_dataset_trento",
+                      x="ST_X(the_geom)", y="ST_Y(the_geom)",
+                      key="id", output=nomeR , where=where, overwrite=True)
+
+    grass.run_command("v.surf.bspline",
+                      input=nomeR, raster_output='{0}_rasterCo'.format(map_name),
+                      method="linear", column="co", _lambda="0.05",
+                      overwrite=True, quiet=True)
+
+    grass.run_command("r.mapcalc",
+                      expression="{0}_no0=if({0}_rasterCo,{0}_rasterCo,0,0)"
+                                 .format(map_name),
+                      overwrite=True, quiet=True)
+
+    grass.run_command("r.mapcalc",
+                      expression="{0}_co9999=if(isnull({0}_no0),-9999,{0}_no0)"
+                                 .format(map_name),
+                      overwrite=True, quiet=True)
+
+    grass.run_command("r.out.gdal",
+                      input="{0}_co9999".format(map_name), format="GTiff",
+                      output="{0}{1}.tiff".format(DIRECTORY, map_name),
+                      overwrite=True, quiet=True)
 
     if default_val is not None:
-        grass.run_command("r.mapcalc", expression=map_name + "_coavg=if(isnull(" + map_name + "_no0)," + str(default_val) + ',' + map_name + "_no0)", overwrite=True, quiet=True)
-        grass.run_command("r.out.gdal", input=map_name + "_coavg", format="GTiff", output=DIRECTORY + map_name + '_avg' + ".tiff", overwrite=True, quiet=True)
+        grass.run_command("r.mapcalc",
+                          expression="{0}_coavg=if(isnull({0}_no0),{1},{0}_no0)"
+                                     .format(map_name, default_val),
+                          overwrite=True, quiet=True)
+
+        grass.run_command("r.out.gdal",
+                          input="{0}_coavg".format(map_name), format="GTiff",
+                          output='{0}{1}_avg.tiff'.format(DIRECTORY, map_name),
+                          overwrite=True, quiet=True)
 
     # uploadRasterMap(DIRECTORY, nomeMappa + ".tiff")
-    grass.run_command("v.db.connect", flags="d", map=nomeR, quiet=True)
-    grass.run_command("g.mremove", flags="fr", vect=map_name + "_*", rast=map_name + "_*", overwrite=True, quiet=True)
+    grass.run_command("v.db.connect",
+                      flags="d", map=nomeR, quiet=True)
+
+    grass.run_command("g.mremove",
+                      flags="fr", vect="{0}_*".format(map_name),
+                      rast="{0}_*".format(map_name), overwrite=True, quiet=True)
     return True
 
 

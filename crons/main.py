@@ -60,24 +60,23 @@ def gen_map(t_start, t_end, map_name, dow=-1, default_val=None, testing=False):
     )
 
 
-def move_to_db(map_name, rid):
+def move_to_db(map_name, table_name=None):
+    table_name = table_name or map_name
+
     cmd = ['-c',
-           '/usr/local/share/pgsql93stable/bin/raster2pgsql -s 32632 -I -C -d '
-           '/hardmnt/geopg0/db93stable/appiedi/grass_output/{0}.tiff'
-           ' raster_temp |  psql -U appiedi -h geopg -p 50003 '
-           '-d appiedi'.format(map_name)
+           '/usr/local/share/pgsql93stable/bin/raster2pgsql -s 32632 -I -t 5x5 '
+           '-d {0}.tiff {1} |  psql -U appiedi -h geopg -p 50003 '
+           '-d appiedi'.format(map_name, table_name)
            ]
+
     out, err, ret = call_command(cmd, shell=True)
     if ret != 0:
         print('ERROR: retval <> 0, something went wrong')
-        return
-        # move temp_table to definitive one
-    with psycopg2.connect(**DB_SETTINGS) as conn:
-        with conn.cursor() as cur:
-            query = 'WITH r AS (SELECT rast FROM raster_temp LIMIT 1) UPDATE' \
-                    ' raster_co3 SET rast=r.rast FROM r WHERE' \
-                    ' raster_co3.rid={0};'.format(rid)
-            cur.execute(query)
+
+
+def raster_values_to_graph():
+    with psycopg2.connect(**DB_SETTINGS) as conn, conn.cursor() as cur:
+        cur.callproc('raster_values_to_graph')
 
 
 def main():
@@ -94,19 +93,17 @@ def main():
     v_print('Data inserted into DB.', verbose)
 
     # generate maps
-    yesterday = \
-        time.mktime(datetime.fromtimestamp(t - 24 * 60 * 60).date().timetuple())
 
     # all inclusive map
     v_print('Generating general map...', verbose)
     avg_val = get_avg_co2_value()
     gen_map(0.0, t, 'general', default_val=avg_val, testing=testing)
-    v_print('Moving to db general...')
-    move_to_db('general', 1)
-    v_print('Moving to db general_avg')
-    move_to_db('general_avg', 10)
+    v_print('Moving to db general...', verbose)
+    move_to_db('general', 'co_general')
+    v_print('Moving to db general_avg', verbose)
+    move_to_db('general_avg', 'co_general_avg')
+    raster_values_to_graph()
     v_print('Done.', verbose)
-
 
     # last 7 days
     # week_start = time.mktime(
@@ -115,16 +112,16 @@ def main():
     v_print('Generating weekly map...', verbose)
     #gen_map(week_start, t, 'week')
     gen_map(t - (7 * 24 * 60 * 60), t, 'week', testing=testing)
-    v_print('Moving to db...')
-    move_to_db('week', 2)
+    v_print('Moving to db...', verbose)
+    move_to_db('week', 'co_weekly')
     v_print('Done.', verbose)
 
     # day of the week
     dow = (dt.weekday() + 1) % 7
     v_print('Generating DOW map for dow n. {0}'.format(dow), verbose)
     gen_map(0.0, t, 'dow_{0}'.format(dow), dow, testing=testing)
-    v_print('Moving to db...')
-    move_to_db('dow_{0}'.format(dow), 3 + dow)
+    v_print('Moving to db...', verbose)
+    move_to_db('dow_{0}'.format(dow), 'co_dow{0}'.format(dow))
     v_print('Done.', verbose)
 
 

@@ -51,16 +51,17 @@ def co_values(request, lon, lat):
     cur = conn.cursor()
     try:
         # total
-        cur.callproc('query_raster', ['1', lon, lat])
+        # cur.callproc('query_raster', ['1', lon, lat])
+        cur.callproc('query_raster', ['co_general', lon, lat])
         res['results']['total'] = cur.fetchone()[0]
 
         # weekly
-        cur.callproc('query_raster', [2, lon, lat])
+        cur.callproc('query_raster', ['co_weekly', lon, lat])
         res['results']['weekly'] = cur.fetchone()[0]
 
         # dow
         dow = (datetime.now().weekday() + 1) % 7
-        cur.callproc('query_raster', [(dow+3), lon, lat])
+        cur.callproc('query_raster', ['co_dow{0}'.format(dow), lon, lat])
         res['results']['dow'] = cur.fetchone()[0]
 
         # yesterday daily average
@@ -120,7 +121,7 @@ def query_average(request, date_s, date_e, lon_s, lon_e, lat_s, lat_e):
     except (TypeError, psycopg2.Error) as e:
         res['error'] = str(e)
     finally:
-        cur.close
+        cur.close()
         conn.close()
     return res
 
