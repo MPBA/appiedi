@@ -83,6 +83,7 @@ def co_values(request, lon, lat):
         cur.callproc('get_trend_average', [ta_start, ta_end])
         res['results']['trend_average'] = dict(cur.fetchall())
         cur.close()
+        conn.commit()
     except Exception as e:
         res['error'] = str(e)
     finally:
@@ -100,6 +101,7 @@ def trend_average(request, date_start, date_end):
     try:
         cur.callproc('get_trend_average', [date_start, date_end])
         res['results'] = dict(cur.fetchall())
+        conn.commit()
     except Exception as e:
         res['error'] = str(e)
     finally:
@@ -125,6 +127,7 @@ def query_average(request, date_s, date_e, lon_s, lon_e, lat_s, lat_e):
     try:
         cur.execute(query, (lat_s, lat_e, lon_s, lon_e, date_s, date_e))
         res['result'] = cur.fetchone()[0]
+        conn.commit()
 
     except (TypeError, psycopg2.Error) as e:
         res['error'] = str(e)
