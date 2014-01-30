@@ -5,6 +5,6 @@ import numpy
 #the function returns the IP of the nearest neighbor of sou
 
 def nns(poi, sou):
-	points = numpy.array(poi)
-	source = numpy.array(sou)
-	return numpy.argmin(((points - source)*(points - source)).sum(1))
+    points = numpy.array(poi)
+    source = numpy.array(sou)
+    return numpy.argmin(((points - source) * (points - source)).sum(1))
