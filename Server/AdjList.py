@@ -1,14 +1,22 @@
 import sys
-import ogr
+from osgeo import ogr
 from findpath_edges import findpath
 from dijkstra import dijkstra
+from local_settings import DB_SETTINGS
 
-ds = ogr.Open("grafo_random.shp")
-if ds is None:
+# conn = ogr.Open('PG:dbname=appiedi host=geopg port=50003 user=appiedi password=app2K14iedi!!')
+conn = ogr.Open(
+    'PG:dbname={0} host={1} port={2} user={3} password={4}'
+    .format(DB_SETTINGS['database'], DB_SETTINGS['host'], DB_SETTINGS['port'],
+            DB_SETTINGS['user'], DB_SETTINGS['password'])
+)
+
+# ds = ogr.Open("grafo_random.shp")
+if conn is None:
     print "Open failed.\n"
     sys.exit(1)
 
-lyr = ds.GetLayer()
+lyr = conn.GetLayer('grafo_trento')
 
 lyr.ResetReading()
 
@@ -18,7 +26,7 @@ edges = []
 
 for feat in lyr:
     linesList.append(feat)
-    edges.append([feat["LENGTH"], feat["POLLUTION"], []])
+    edges.append([feat['length'], feat['co'], []])
 
 for i in range(0, len(linesList)):
     geom0 = linesList[i].GetGeometryRef()
