@@ -78,10 +78,10 @@ def co_values(request, lon, lat):
         ta_end = (datetime.now() - timedelta(days=1)).date()
         cur.callproc('get_trend_average', [ta_start, ta_end])
         res['results']['trend_average'] = dict(cur.fetchall())
+        cur.close()
     except Exception as e:
         res['error'] = str(e)
     finally:
-        cur.close()
         conn.close()
 
     return res
