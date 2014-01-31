@@ -141,7 +141,7 @@ def query_average(request, date_s, date_e, lon_s, lon_e, lat_s, lat_e):
 def pathfinder(request, lon_s, lat_s, lon_e, lat_e):
     res = {'results': None, 'error': None}
     conn = psycopg2.connect(**DB_SETTINGS)
-    cur = conn.cur()
+    cur = conn.cursor()
 
     try:
         (lon_s, lat_s, lon_e, lat_e) = map(float, (lon_s, lat_s, lon_e, lat_e))
