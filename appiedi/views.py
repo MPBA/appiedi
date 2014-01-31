@@ -139,26 +139,26 @@ def query_average(request, date_s, date_e, lon_s, lon_e, lat_s, lat_e):
 
 @render_to_json(mimetype='application/json')
 def pathfinder(request, lon_s, lat_s, lon_e, lat_e):
+    res = {'results': None, 'error': None}
+    conn = psycopg2.connect(**DB_SETTINGS)
+    cur = conn.cur()
+
     try:
         (lon_s, lat_s, lon_e, lat_e) = map(float, (lon_s, lat_s, lon_e, lat_e))
+        cur.callproc('compute_path', [lon_s, lat_s, lon_e, lat_e])
+        r = cur.fetchall()
+        res['results'] = r
+
     except ValueError:
         return {'result': None, 'error': 'Coordinates are not valid.'}
-    return {
-        'result': [
-            [11.12040, 46.06962, 1.12],
-            [11.12118, 46.06970, 4.34],
-            [11.12120, 46.06898, 10.43],
-            [11.12122, 46.06888, 15.545],
-            [11.12129, 46.06851, 3.12],
-            [11.12139, 46.06800, 4.234],
-            [11.12147, 46.06773, 3.00],
-            [11.12186, 46.06765, 6.975],
-            [11.12178, 46.06758, 7.432],
-            [11.12187, 46.06716, 8.22],
-            [11.12102, 46.06706, 0]
-        ],
-        'error': None
-    }
+    except (psycopg2.Error, Exception) as e:
+        res['error'] = str(e)
+    finally:
+        cur.close()
+        conn.close()
+
+    return res
+
 
 # def process_list(request):
 #     try:
