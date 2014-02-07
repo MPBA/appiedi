@@ -72,7 +72,8 @@ def move_to_db(map_name, table_name=None):
            '-d appiedi'.format(map_name, table_name)
            ]
 
-    out, err, ret = call_command(cmd, shell=True)
+    env = dict(PGPASSWORD=DB_SETTINGS['password'])
+    out, err, ret = call_command(cmd, environment=env, shell=True)
     if ret != 0:
         print('ERROR: retval <> 0, something went wrong')
 
