@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import time
 import os
@@ -11,6 +13,7 @@ from telecomsync import fetch_telecom_data, insert_data
 from generatemaps import generate_map
 from utils import postgres_timestamp_format, get_avg_co2_value
 from local_settings import DB_SETTINGS
+from generate_adj_list import generate_adj_list
 
 
 def v_print(s, v=True):
@@ -65,7 +68,7 @@ def move_to_db(map_name, table_name=None):
 
     cmd = ['-c',
            '/usr/local/share/pgsql93stable/bin/raster2pgsql -s 32632 -I -t 5x5 '
-           '-d {0}.tiff {1} |  psql -U appiedi -h geopg -p 50003 '
+           '-d /hardmnt/geopg0/db93stable/appiedi/grass_output/{0}.tiff {1} |  psql -U appiedi -h geopg -p 50003 '
            '-d appiedi'.format(map_name, table_name)
            ]
 
@@ -125,6 +128,11 @@ def main():
     move_to_db('dow_{0}'.format(dow), 'co_dow{0}'.format(dow))
     v_print('Done.', verbose)
 
+    v_print('Generating adj list...', verbose)
+    generate_adj_list()
+    v_print('Done.', verbose)
+
 
 if __name__ == '__main__':
     main()
+
