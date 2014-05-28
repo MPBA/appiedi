@@ -18,7 +18,7 @@ from local_settings import DB_SETTINGS
 # Create your views here.
 @render_to_json(mimetype='application/json')
 def hello(request):
-    td = TelecomDataset.objects.filter(pressure__gte=1)
+    # td = TelecomDataset.objects.filter(pressure__gte=1)
 
     #ser = ListSerializer(item_serializer=DjangoModelSerializer(
         #[exclude_fields(['is_staff', 'is_superuser', 'password'])]
@@ -146,6 +146,29 @@ def pathfinder(request, lon_s, lat_s, lon_e, lat_e):
     try:
         (lon_s, lat_s, lon_e, lat_e) = map(float, (lon_s, lat_s, lon_e, lat_e))
         cur.callproc('compute_path', [lon_s, lat_s, lon_e, lat_e])
+        r = cur.fetchall()
+        res['results'] = r
+
+    except ValueError:
+        return {'result': None, 'error': 'Coordinates are not valid.'}
+    except (psycopg2.Error, Exception) as e:
+        res['error'] = str(e)
+    finally:
+        cur.close()
+        conn.close()
+
+    return res
+
+
+@render_to_json(mimetype='application/json')
+def pathfinder_circular(request, lon_s, lat_s, length):
+    res = {'results': None, 'error': None}
+    conn = psycopg2.connect(**DB_SETTINGS)
+    cur = conn.cursor()
+
+    try:
+        (lon_s, lat_s) = map(float, (lon_s, lat_s))
+        cur.callproc('compute_cpath', [lon_s, lat_s, length])
         r = cur.fetchall()
         res['results'] = r
 
