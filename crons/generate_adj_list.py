@@ -1,6 +1,7 @@
 import json
 from osgeo import ogr
 from local_settings import DB_SETTINGS
+import sys
 
 def generate_adj_list(path='/hardmnt/geopg0/db93stable/appiedi/pathfinder/adjlist_data.json'):
     conn = ogr.Open(

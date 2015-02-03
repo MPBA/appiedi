@@ -4,15 +4,6 @@ import time
 from telecomsync import fetch_telecom_data, insert_data
 from utils import telecom_timestamp_format, postgres_timestamp_format
 
-"""
-ATTENTION PLEASE
-before starting to blame me for the ugliness of this script, consider
-I made it at 2 a.m. with Franch, in a desperate attempt to fix some 
-freaked up things. Thank you.
-
-===
-Fetches all telecom data
-"""
 
 def utc_mktime(utc_tuple):
     """Returns number of seconds elapsed since epoch
